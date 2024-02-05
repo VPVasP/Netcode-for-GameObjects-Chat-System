@@ -13,23 +13,21 @@ public class PlayerNetwork : NetworkBehaviour
     private TextMeshProUGUI messageText;
     private TMP_InputField inputField;
     private bool sentMessage;
-
-
+    [SerializeField] private float position=5f;
     private NetworkVariable<MyCustomData> CustomData = new NetworkVariable<MyCustomData>(new MyCustomData
     {
-  
+
     }, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
     private void Start()
     {
         //we find the input field in the scene
         inputField = FindObjectOfType<TMP_InputField>();
-
         //we get the text conmponent of the player
         messageText = GetComponentInChildren<TextMeshProUGUI>();
         messageText.text = "";
 
-        speed = 5; 
+        speed = 5;
 
         //we set up the event listener from the code and we check if we are the owner 
         if (inputField != null && IsOwner)
@@ -39,18 +37,20 @@ public class PlayerNetwork : NetworkBehaviour
     }
     public struct MyCustomData : INetworkSerializable
     {
-   //we define a string of 128 characters so the message can be long 
+        //we define a string of 128 characters so the message can be long 
         public FixedString128Bytes _message;
 
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
         {
-           //we serialize the value of our message to send it to the network
+            //we serialize the value of our message to send it to the network
             serializer.SerializeValue(ref _message);
         }
     }
     //when the object is spawned inside the network
     public override void OnNetworkSpawn()
     {
+
+        transform.position = new Vector3(Random.Range(position, -position), 0, Random.Range(position, -position));
         //this is triggered when the value data is changed
         CustomData.OnValueChanged += (MyCustomData previousValue, MyCustomData newValue) =>
         {
@@ -62,9 +62,11 @@ public class PlayerNetwork : NetworkBehaviour
     }
     void Update()
     {
+    
 
-        
         if (!IsOwner) return;
+
+
         //get input axis 
         float horizontal = Input.GetAxis("Horizontal");
         float vertical = Input.GetAxis("Vertical");
@@ -80,10 +82,12 @@ public class PlayerNetwork : NetworkBehaviour
             Invoke("MakeMessageDissapearRpc", 2f);
             Invoke("ClearInputFieldText", 0.5f);
             sentMessage = false;
-          
+
         }
+        
+      
         //if we press the enter key then the message can be sent
-        if(Input.GetKeyDown(KeyCode.KeypadEnter))
+        if (Input.GetKeyDown(KeyCode.KeypadEnter))
         {
             string typedMessage = inputField.text;
             messageText.text = typedMessage;
@@ -91,7 +95,7 @@ public class PlayerNetwork : NetworkBehaviour
             //we update the customdata with a new message
             CustomData.Value = new MyCustomData
             {
-    
+
                 _message = typedMessage
             };
         }
@@ -115,7 +119,7 @@ public class PlayerNetwork : NetworkBehaviour
     private void MakeMessageDissapearRpc()
     {
         messageText.text = "";
-      
+
     }
     //method that clears the input field text
     private void ClearInputFieldText()

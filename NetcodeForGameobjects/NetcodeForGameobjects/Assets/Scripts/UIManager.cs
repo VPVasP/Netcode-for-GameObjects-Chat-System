@@ -25,6 +25,7 @@ public class UIManager : MonoBehaviour
         //start client button functionallity
         hostButton.onClick.AddListener(() => {
             NetworkManager.Singleton.StartHost();
+           
            uiContainer.SetActive(false);
             gameContainer.SetActive(true);
             SoundManager.instance.PlayWelcomeAudioClip();
